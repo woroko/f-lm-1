@@ -1,0 +1,2 @@
+Train:
+--logdir=logs/test --num_gpus=1 --datadir=/Users/ruiyangwang/Desktop/examples/word_language_model/data/penn --hpconfig run_profiler=False,float16_rnn=False,max_time=$SECONDS,num_steps=20,num_shards=8,num_layers=2,learning_rate=0.2,max_grad_norm=1,keep_prob=0.9,emb_size=10,projected_size=10,state_size=80,num_sampled=80,batch_size=1

@@ -15,7 +15,6 @@ class DataUtilsTestCase(unittest.TestCase):
     def test_dataset(self):
         vocab = Vocabulary.from_file("testdata/test_vocab.txt")
         dataset = Dataset(vocab, "testdata/*")
-
         def generator():
             for i in range(1, 10):
                 yield [0] + list(range(1, i + 1)) + [0]

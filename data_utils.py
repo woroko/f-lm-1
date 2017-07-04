@@ -84,6 +84,8 @@ class Dataset(object):
             for line in lines:
                 yield self._parse_sentence(line)
 
+
+
     def _sentence_stream(self, file_stream):
         for file_name in file_stream:
             for sentence in self._parse_file(file_name):
