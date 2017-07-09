@@ -7,6 +7,7 @@ import os
 
 import tensorflow as tf
 
+import predict
 import prediction
 from data_utils import Vocabulary, Dataset
 from language_model import LM
@@ -39,17 +40,20 @@ def main(_):
         dataset = Dataset(vocab, os.path.join(FLAGS.datadir, "train/train.txt"))
         run_train(dataset, hps, os.path.join(FLAGS.logdir, "train"), ps_device="/gpu:0")
     elif FLAGS.mode.startswith("eval_"):
-        #data_dir = os.path.join(FLAGS.datadir, "eval/valid.txt")
-        predict_model = prediction.Model('/Users/ruiyangwang/Desktop/model/model.ckpt-44260','/Users/ruiyangwang/Desktop/vocabulary2.txt', hps)
+        print 'start eval'
+        data_dir = os.path.join(FLAGS.datadir, "eval/valid.txt")
+        #predict_model = prediction.Model("/Users/ruiyangwang/Desktop/f-lm/logs/test/train/model.ckpt-0", os.path.join(FLAGS.datadir, "vocabulary.txt"), hps)
 
-        #dataset = Dataset(vocab, data_dir, deterministic=True)
-        prefix_words = '中华 民国 八十四 年 七月 一日'.split()
-        print 'start input'
-        print predict_model.predict_top(prefix_words)
+        dataset = Dataset(vocab, data_dir, deterministic=True)
+        #prefix_words = 'i like music very much'
+        #predict_model.predict_top(prefix_words)
         #prediction.topkwords(prefix_words, dataset, hps, FLAGS.logdir, FLAGS.mode)
        # sentence_ppl(prefix_words,dataset, hps, FLAGS.logdir, FLAGS.mode)
         #print vocab
-        #run_eval(dataset, hps, FLAGS.logdir, FLAGS.mode, FLAGS.eval_steps)
+        run_eval(dataset, hps, FLAGS.logdir, FLAGS.mode, FLAGS.eval_steps)
+        #model = predict.Model(hps, FLAGS.logdir, FLAGS.datadir)
+        #print model.predictnextkwords(prefix_words.split(), 5)
+        #print model.predictnextkwords('know'.split(), 5)
 
 
 if __name__ == "__main__":

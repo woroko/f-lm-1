@@ -4,7 +4,6 @@ from model_utils import sharded_variable, getdtype, variable_summaries
 from common import assign_to_gpu, average_grads, find_trainable_variables
 from hparams import HParams
 from tensorflow.contrib.rnn import LSTMCell
-
 from factorized_lstm_cells import GLSTMCell, ResidualWrapper, FLSTMCell
 
 
@@ -15,12 +14,7 @@ class LM(object):
         self.x = tf.placeholder(tf.int32, [data_size, hps.num_steps])
         self.y = tf.placeholder(tf.int32, [data_size, hps.num_steps])
         #self.w = tf.placeholder(tf.int32, [data_size, hps.num_steps])
-        self.batch_size = tf.placeholder(tf.int32, [])
-        tf.add_to_collection('input_xs', self.x)
-        tf.add_to_collection('input_ys', self.y)
-        tf.add_to_collection('batch_size', self.batch_size)
-        init_op = tf.global_variables_initializer()
-
+        #self.softmax = {}
         losses = []
         tower_grads = []
         #xs = tf.split(0, hps.num_gpus, self.x)
@@ -32,13 +26,14 @@ class LM(object):
             with tf.device(assign_to_gpu(i, ps_device)), tf.variable_scope(tf.get_variable_scope(),
                                                                            reuse=True if i > 0 else None):
                 #loss = self._forward(i, xs[i], ys[i], ws[i])
-                loss = self._forward(i, xs[i], ys[i])
+                loss , softmax = self._forward(i, xs[i], ys[i])
                 losses += [loss]
                 if mode == "train":
                     cur_grads = self._backward(loss,  summaries=((i == hps.num_gpus - 1) and hps.do_summaries))
                     tower_grads += [cur_grads]
 
         self.loss = tf.add_n(losses) / len(losses)
+        self.softmax = softmax
         tf.summary.scalar("model/loss", self.loss)
 
         self.global_step = tf.get_variable("global_step", [], tf.int32, trainable=False)
@@ -83,7 +78,6 @@ class LM(object):
                                      trainable=False, collections=[tf.GraphKeys.LOCAL_VARIABLES],
                                      name="state_h_%d_%d" % (gpu, i), dtype=getdtype(hps, True)),
                          )
-
                 self.initial_states += [state]
 
         emb_vars = sharded_variable("emb", [hps.vocab_size, hps.emb_size],
@@ -119,6 +113,7 @@ class LM(object):
 
                 state = tf.contrib.rnn.LSTMStateTuple(self.initial_states[i][0],
                                                   self.initial_states[i][1])
+
                 if hps.use_residual:
                     cell = ResidualWrapper(cell=cell)
 
@@ -135,7 +130,6 @@ class LM(object):
 
                 # inputs = tf.reshape(tf.concat(1, inputs), [-1, hps.projected_size])
         inputs = tf.reshape(tf.concat(inputs, 1), [-1, hps.projected_size])
-        tf.add_to_collection('hidden_output', inputs)
 
         # Initialization ignores the fact that softmax_w is transposed. Twhat worked slightly better.
         softmax_w = sharded_variable("softmax_w", [hps.vocab_size, hps.projected_size], hps.num_shards)
@@ -146,7 +140,6 @@ class LM(object):
 
         logits = tf.matmul(tf.to_float(inputs), full_softmax_w, transpose_b=True) + softmax_b
         softmax = tf.nn.softmax(logits)
-        tf.add_to_collection('softmax', softmax)
 
         if hps.num_sampled == 0:
 
@@ -158,7 +151,7 @@ class LM(object):
                                                hps.num_sampled, hps.vocab_size)
         #loss = tf.reduce_mean(loss * tf.reshape(w, [-1]))
         loss = tf.reduce_mean(loss)
-        return loss
+        return loss, softmax
 
     def _backward(self, loss, summaries=False):
         hps = self.hps
