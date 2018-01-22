@@ -139,7 +139,7 @@ class LM(object):
         full_softmax_w = full_softmax_w[:hps.vocab_size, :]
 
         logits = tf.matmul(tf.to_float(inputs), full_softmax_w, transpose_b=True) + softmax_b
-        softmax = tf.nn.softmax(logits)
+        softmax = tf.nn.softmax(logits / hps.softmax_temperature)
 
         if hps.num_sampled == 0:
 
@@ -240,5 +240,6 @@ class LM(object):
             save_summary_every_min=16,
             do_sharing=False,
             use_residual=False,
-            loss_scale=1.0
+            loss_scale=1.0,
+            softmax_temperature=1.0
 )

@@ -23,9 +23,11 @@ def run_train(dataset, hps, logdir, ps_device, task=0, master=""):
     print("LOCAL VARIABLES")
     for v in tf.local_variables():
         print("%s %s %s %s" % (v.name, v.get_shape(), v.dtype, v.device))
-
+    
+    trainsaver = tf.train.Saver(max_to_keep=3, keep_checkpoint_every_n_hours=4)
     sv = tf.train.Supervisor(is_chief=(task == 0),
                              logdir=logdir,
+                             saver=trainsaver,
                              summary_op=None,  # Automatic summaries don't work with placeholders.
                              global_step=model.global_step,
                              save_summaries_secs=60*hps.save_summary_every_min,

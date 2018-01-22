@@ -107,7 +107,12 @@ class Dataset(object):
                     while tokens_filled < num_steps:
                         if streams[i] is None or len(streams[i]) <= 1:
                             streams[i] = next(sentences)
+                        
+                        for col in range(len(streams[i])):
+                            if streams[i][col] is None:
+                                streams[i][col] = self._vocab.get_id("<UNK>")
                         num_tokens = min(len(streams[i]) - 1, num_steps - tokens_filled)
+                        #print("num_tokens:" + str(num_tokens) + "i:" + str(i) + "tokens_filled" + str(tokens_filled) + "streams:\n" + str(streams[i][:num_tokens]))
                         x[i, tokens_filled:tokens_filled+num_tokens] = streams[i][:num_tokens]
                         y[i, tokens_filled:tokens_filled + num_tokens] = streams[i][1:num_tokens+1]
                         #w[i, tokens_filled:tokens_filled + num_tokens] = 1

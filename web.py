@@ -31,7 +31,7 @@ def run():
 
     parser = argparse.ArgumentParser()
     arg = parser.add_argument
-    hps = LM.get_default_hparams().parse('num_steps=20,num_shards=6,num_layers=2,learning_rate=0.2,max_grad_norm=1,keep_prob=0.9,emb_size=1024,projected_size=1024,state_size=8192,num_sampled=8192,batch_size=512,vocab_size=11859,num_of_groups=4')
+    hps = LM.get_default_hparams().parse('num_steps=20,num_shards=8,num_layers=2,emb_size=12,projected_size=12,state_size=80,num_sampled=0,batch_size=1,vocab_size=102')
     hps._set("num_gpus", 1)
     #arg('model')
     #arg('vocab')
@@ -42,7 +42,7 @@ def run():
 
     global model
     #model = Model(args.model, args.vocab, hps)
-    model = Model('/Users/ruiyangwang/Desktop/model/model.ckpt-44260','/Users/ruiyangwang/Desktop/vocabulary2.txt', hps)
+    model = Model('/Users/ruiyangwang/Desktop/f-lm/logs/test/train/model.ckpt-0','/Users/ruiyangwang/Desktop/examples/word_language_model/data/penn/vocabulary.txt', hps)
     app.run(port=args.port, host=args.host, debug=args.debug)
 
 
